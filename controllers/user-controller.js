@@ -9,7 +9,7 @@ const userController = {
   signUp: (req, res, next) => {
     if (req.body.password !== req.body.passwordCheck) throw new Error('Password do not match!')
     User.findOne({ where: { email: req.body.email } })
-      .then((user) => {
+      .then(user => {
         if (user) throw new Error('Email already exist!')
         return bcrypt.hash(req.body.password, 10)
       })
@@ -23,6 +23,18 @@ const userController = {
         res.redirect('/signin')
       })
       .catch(err => next(err))
+  },
+  signInPage: (req, res) => {
+    res.render('signin')
+  },
+  signIn: (req, res) => {
+    req.flash('success_messages', '登入成功')
+    res.redirect('/restaurants')
+  },
+  logout: (req, res) => {
+    req.flash('success_messages', '登出成功')
+    req.logout()
+    res.redirect('/signin') 
   }
 }
 
