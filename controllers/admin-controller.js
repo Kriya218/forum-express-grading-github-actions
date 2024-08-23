@@ -1,5 +1,6 @@
-const { Restaurant } = require('../models')
+const { Restaurant, User } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
+const { raw } = require('express')
 
 const adminController = {
   getRestaurants: (req, res, next) => {
@@ -84,6 +85,32 @@ const adminController = {
         return restaurant.destroy()
       })
       .then(() => res.redirect('/admin/restaurants'))
+      .catch(err => next(err))
+  },
+  getUsers: (req, res) => {
+    return User.findAll({ raw: true })
+      .then(users => {
+        return res.render('admin/users', { users })
+      })
+  },
+  patchUser: (req, res, next) => {
+    Promise.all([
+      User.findOne({ where: { email: 'root@example.com' } }),
+      User.findByPk(req.params.id)
+    ])
+      .then(([rootUser, user]) => {
+        const rootId = rootUser.id
+        if (user.id === rootId && req.user.id !== rootId) throw new Error('禁止變更 root 權限')
+        if (user.isAdmin) {
+          return user.update({ isAdmin: 0 })
+        }
+        return user.update({ isAdmin: 1 })
+      })
+      .then(user => user.save())
+      .then(() => {
+        req.flash('success_messages', '使用者權限變更成功')
+        return res.redirect('/admin/users')
+      })
       .catch(err => next(err))
   }
 }
