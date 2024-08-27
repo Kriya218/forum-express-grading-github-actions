@@ -21,17 +21,13 @@ const restaurantController = {
     })
       .then(restaurant => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
-        return restaurant.increment('viewCounts', { by: 1 })
-      })
-      .then(restaurant => {
-        const rest = restaurant.toJSON()
-        res.render('restaurant', { restaurant: rest })
+        restaurant.increment('viewCounts', { by: 1 })
+        return res.render('restaurant', { restaurant: restaurant.toJSON() })
       })
       .catch(err => next(err))
   },
   getDashboard: (req, res, next) => {
     return Restaurant.findByPk(req.params.id, {
-      attributes: ['name', 'categoryId', 'viewCounts'],
       include: Category,
       nest: true,
       raw: true
