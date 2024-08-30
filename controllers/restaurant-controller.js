@@ -1,5 +1,6 @@
 const { Restaurant, Category, Comment, User } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
+const { where } = require('sequelize')
 
 const restaurantController = {
   getRestaurants: (req, res, next) => {
@@ -36,28 +37,36 @@ const restaurantController = {
       .catch(err => next(err))
   },
   getRestaurant: (req, res, next) => {
-    return Restaurant.findByPk(req.params.id, {
+    Restaurant.findByPk(req.params.id, {
       include: [
         Category,
         { model: Comment, include: User }
-      ]
+      ],
+      order: [[{ model: Comment }, 'created_at', 'DESC']]
     })
       .then(restaurant => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
         restaurant.increment('viewCounts', { by: 1 })
+        console.log('restaurant:', restaurant.toJSON())
         return res.render('restaurant', { restaurant: restaurant.toJSON() })
       })
       .catch(err => next(err))
   },
   getDashboard: (req, res, next) => {
-    return Restaurant.findByPk(req.params.id, {
-      include: Category,
-      nest: true,
-      raw: true
-    })
-      .then(restaurant => {
+    return Promise.all([
+      Restaurant.findByPk(req.params.id, {
+        include: Category,
+        nest: true,
+        raw: true
+      }),
+      Comment.findAndCountAll({
+        where: { restaurant_id: req.params.id },
+        raw: true
+      })
+    ])
+      .then(([restaurant, comments]) => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
-        res.render('dashboard', { restaurant })
+        res.render('dashboard', { restaurant, comments })
       })
       .catch(err => next(err))
   }
