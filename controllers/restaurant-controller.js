@@ -1,6 +1,5 @@
 const { Restaurant, Category, Comment, User } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
-const { where } = require('sequelize')
 
 const restaurantController = {
   getRestaurants: (req, res, next) => {
@@ -31,6 +30,7 @@ const restaurantController = {
           restaurants: data,
           categories,
           categoryId,
+          limit,
           pagination: getPagination(limit, page, restaurants.count)
         })
       })

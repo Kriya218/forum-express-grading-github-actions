@@ -1,14 +1,29 @@
+<div class="dropdown d-flex justify-content-end mb-2">
+  <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown"
+    aria-expanded="false">
+    每頁顯示: {{limit}}筆
+  </a>
+  <div class="dropdown-menu">
+    <a class="dropdown-item" href="?limit=9&page={{pagination.currentPage}}&categoryId={{categoryId}}">9</a>
+    <a class="dropdown-item" href="?limit=12&page={{pagination.currentPage}}&categoryId={{categoryId}}">12</a>
+    <a class="dropdown-item" href="?limit=18&page={{pagination.currentPage}}&categoryId={{categoryId}}">18</a>
+    <a class="dropdown-item" href="?limit=21&page={{pagination.currentPage}}&categoryId={{categoryId}}">21</a>
+  </div>
+</div>
+
 <ul class="nav nav-pills">
   <li class="nav-item">
-    <a class="nav-link {{#ifCond '' categoryId}}active{{/ifCond}}" href="?categoryId=">全部</a>
+    <a class="nav-link {{#ifCond '' categoryId}}active{{/ifCond}}" href="?categoryId=&limit={{limit}}">全部</a>
   </li>
   {{#each categories}}
   <li class="nav-item">
     <a class="nav-link {{#ifCond this.id ../categoryId}}active{{/ifCond}}"
-      href="?categoryId={{this.id}}">{{this.name}}</a>
+      href="?categoryId={{this.id}}&limit={{../limit}}">{{this.name}}</a>
   </li>
   {{/each}}
 </ul>
+
+
 <div class="row mt-3">
   {{#each restaurants}}
   <div class="col-md-4">
@@ -33,7 +48,7 @@
   <nav class="mt-3" aria-label="page navigation">
     <ul class="pagination">
       <li class="page-item {{#ifCond pagination.currentPage 1}}disabled{{/ifCond}}">
-        <a class="page-link" href="/restaurants?page={{pagination.prev}}&categoryId={{categoryId}}" aria-label="Previous">
+        <a class="page-link" href="/restaurants?page={{pagination.prev}}&categoryId={{categoryId}}&limit={{limit}}" aria-label="Previous">
           <span aria-hidden="true">&laquo;</span>
         </a>
       </li>
@@ -42,12 +57,12 @@
       <li class="page-item active"><a class="page-link" href="#">{{this}}</a></li>
       {{else}}
       <li class="page-item">
-        <a class="page-link" href="/restaurants?page={{this}}&categoryId={{../categoryId}}">{{this}}</a>
+        <a class="page-link" href="/restaurants?page={{this}}&categoryId={{../categoryId}}&limit={{../limit}}">{{this}}</a>
       </li>
       {{/ifCond}}
       {{/each}}
       <li class="page-item {{#ifCond pagination.currentPage pagination.totalPage}}disabled{{/ifCond}}">
-        <a class="page-link" href="/restaurants?page={{pagination.next}}&categoryId={{categoryId}}" aria-label="Next">
+        <a class="page-link" href="/restaurants?page={{pagination.next}}&categoryId={{categoryId}}&limit={{limit}}" aria-label="Next">
           <span aria-hidden="true">&raquo;</span>
         </a>
       </li>
