@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const { User, Comment, Restaurant, Favorite, Like } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
-const { where } = require('sequelize')
+const { getUser } = require('../helpers/auth-helpers')
 
 const userController = {
   signUpPage: (req, res) => {
@@ -38,6 +38,7 @@ const userController = {
     res.redirect('/signin')
   },
   getUser: (req, res, next) => {
+    const userId = getUser(req).id
     return Promise.all([
       User.findByPk(req.params.id, {
         include: { model: Comment, include: Restaurant },
@@ -51,7 +52,7 @@ const userController = {
     ])
       .then(([user, comments]) => {
         if (!user) throw new Error("User didn't exist!")
-        return res.render('users/profile', { user, userId: Number(req.user.id), comments })
+        return res.render('users/profile', { user, comments, userId })
       })
       .catch(err => next(err))
   },
