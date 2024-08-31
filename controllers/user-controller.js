@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs')
 const { User, Comment, Restaurant, Favorite } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
-const { where } = require('sequelize')
 
 const userController = {
   signUpPage: (req, res) => {
