@@ -1,4 +1,4 @@
-const { Restaurant, Category, Comment, User } = require('../models')
+const { Restaurant, Category, Comment, User, Favorite } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
 
 const restaurantController = {
@@ -62,18 +62,20 @@ const restaurantController = {
   getDashboard: (req, res, next) => {
     return Promise.all([
       Restaurant.findByPk(req.params.id, {
-        include: Category,
-        nest: true,
-        raw: true
+        include: Category
       }),
       Comment.findAndCountAll({
         where: { restaurant_id: req.params.id },
         raw: true
+      }),
+      Favorite.findAndCountAll({
+        where: { restaurantId: req.params.id },
+        raw: true
       })
     ])
-      .then(([restaurant, comments]) => {
+      .then(([restaurant, comments, favorited]) => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
-        res.render('dashboard', { restaurant, comments })
+        res.render('dashboard', { restaurant: restaurant.toJSON(), comments, favorited })
       })
       .catch(err => next(err))
   },
@@ -96,6 +98,24 @@ const restaurantController = {
     ])
       .then(([restaurants, comments]) => {
         res.render('feeds', { restaurants, comments })
+      })
+      .catch(err => next(err))
+  },
+  getTopRestaurants: (req, res, next) => {
+    return Restaurant.findAll({
+      include: [{ model: User, as: 'FavoritedUsers' }]
+    })
+      .then(restaurants => {
+        const restData = restaurants
+          .map(restaurant => ({
+            ...restaurant.toJSON(),
+            description: restaurant.description.substring(0, 50),
+            favoritedCount: restaurant.FavoritedUsers.length,
+            isFavorited: req.user && req.user.FavoritedRestaurants.some(fr => fr.id === restaurant.id)
+          }))
+          .sort((a, b) => b.favoritedCount - a.favoritedCount)
+          .slice(0, 10)
+        res.render('top-restaurants', { restaurants: restData })
       })
       .catch(err => next(err))
   }

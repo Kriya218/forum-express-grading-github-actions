@@ -169,6 +169,7 @@ const userController = {
             isFollowed: req.user.Followings.some(f => f.id === user.id)
           }))
           .sort((a, b) => b.followerCount - a.followerCount)
+        console.log('results:', results)
         res.render('top-users', { users: results })
       })
       .catch(err => next(err))
