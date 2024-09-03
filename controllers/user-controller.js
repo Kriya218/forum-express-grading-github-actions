@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs')
 const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { localFileHandler } = require('../helpers/file-helpers')
 const { getUser } = require('../helpers/auth-helpers')
+const { checkRepeat } = require('../helpers/check-repeat')
 
 const userController = {
   signUpPage: (req, res) => {
@@ -39,20 +40,26 @@ const userController = {
   },
   getUser: (req, res, next) => {
     const userId = getUser(req).id
-    return Promise.all([
-      User.findByPk(req.params.id, {
-        include: { model: Comment, include: Restaurant },
-        nest: true,
-        raw: true
-      }),
-      Comment.findAndCountAll({
-        where: { userId: req.params.id },
-        raw: true
-      })
-    ])
-      .then(([user, comments]) => {
+    return User.findByPk(req.params.id, {
+      include: [
+        { model: Comment, include: Restaurant },
+        { model: Restaurant, as: 'FavoritedRestaurants' },
+        { model: User, as: 'Followers' },
+        { model: User, as: 'Followings' }
+      ],
+      order: [[{ model: Comment }, 'createdAt', 'DESC']]
+    })
+      .then(user => {
         if (!user) throw new Error("User didn't exist!")
-        return res.render('users/profile', { user, comments, userId })
+        const editedUser = {
+          ...user.toJSON(),
+          commentRests: checkRepeat(user.Comments, 'restaurantId'),
+          commentsCounts: checkRepeat(user.Comments, 'restaurantId').length,
+          favoritedCount: user.FavoritedRestaurants.length,
+          followersCount: user.Followers.length,
+          followingsCount: user.Followings.length
+        }
+        return res.render('users/profile', { user: editedUser, userId })
       })
       .catch(err => next(err))
   },
@@ -169,7 +176,6 @@ const userController = {
             isFollowed: req.user.Followings.some(f => f.id === user.id)
           }))
           .sort((a, b) => b.followerCount - a.followerCount)
-        console.log('results:', results)
         res.render('top-users', { users: results })
       })
       .catch(err => next(err))

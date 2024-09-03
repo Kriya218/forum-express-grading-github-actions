@@ -1,14 +1,17 @@
 {{!-- profile --}}
-<div class="card mb-3" style="max-width: 540px;">
+<div class="card mb-3 col-md-11 mx-auto" style="height: auto;">
   <div class="row g-0">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <img src="{{#if user.image}}{{user.image}}{{else}}https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ12lYNi9ON02p9zySLVYzHFAkvMdJtDiT2oA&s{{/if}}" class="rounded-start square-img" alt="user-profile-photo">
     </div>
-    <div class="col-md-8">
+    <div class="col-md-auto">
       <div class="card-body">
         <h5 class="card-title">{{user.name}}</h5>
         <p class="card-text">{{user.email}}</p>
-        <p class="card-text">已評論餐廳: {{comments.count}}</p>
+        <p class="card-text">已評論餐廳: {{user.commentsCounts}}</p>
+        <p class="card-text">已收藏餐廳: {{user.favoritedCount}}</p>
+        <p class="card-text">{{user.followersCount}} followers</p>
+        <p class="card-text">{{user.followingsCount}} followings</p>
         {{#ifCond user.id userId}}
           <form action="/users/{{user.id}}/edit" method="get">
             <button type="submit" class="btn btn-primary">Edit</button>
@@ -18,16 +21,61 @@
     </div>
   </div>
 </div>
-{{!-- comments --}}
-<div class="card">
-  <div class="card-header">
-    已評論餐廳: {{comments.count}}
-  </div>
-  <div class="card-body d-flex flex-wrap mx-auto">
-    {{#each comments.rows}}
-        <a href="/restaurants/{{this.restaurantId}}" class="card-link ms-0 mx-2" style="width: 9%;">
-          <img src="{{../user.Comments.Restaurant.image}}" class="square-img my-1" alt="restaurant-image">
+{{!-- followers & followings --}}
+<div class="row col-md-11 mx-auto" >
+  <div class="col-md-5 ps-0">
+    <div class="card mb-3">
+      <div class="card-header">
+        {{user.followersCount}} followers
+      </div>
+      <div class="card-body d-flex flex-wrap mx-auto">
+        {{#each user.Followers}}
+        <a href="/users/{{this.id}}" class="card-link ms-0 mx-2" style="width: 9%;">
+          <img src="{{this.image}}" class="square-img my-1" alt="restaurant-image">
         </a>
-    {{/each}}
+        {{/each}}
+      </div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header">
+        {{user.followingsCount}} followings
+      </div>
+      <div class="card-body d-flex flex-wrap mx-auto">
+        {{#each user.Followings}}
+        <a href="/users/{{this.id}}" class="card-link ms-0 mx-2" style="width: 9%;">
+          <img src="{{this.image}}" class="square-img my-1" alt="restaurant-image">
+        </a>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+
+  {{!-- Comments & Favorite --}}
+  <div class="col-md-7 pe-0">
+    <div class="card mb-3">
+      <div class="card-header">
+        已評論餐廳: {{user.commentsCounts}}
+      </div>
+      <div class="card-body d-flex flex-wrap mx-auto">
+        {{#each user.commentRests}}
+        <a href="/restaurants/{{this.Restaurant.dataValues.id}}" class="card-link ms-0 mx-2" style="width: 9%;">
+          <img src="{{this.Restaurant.dataValues.image}}" class="square-img my-1" alt="restaurant-image">
+        </a>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        已收藏餐廳: {{user.favoritedCount}}
+      </div>
+      <div class="card-body d-flex flex-wrap mx-auto">
+        {{#each user.FavoritedRestaurants}}
+        <a href="/restaurants/{{this.id}}" class="card-link ms-0 mx-2" style="width: 9%;">
+          <img src="{{this.image}}" class="square-img my-1" alt="restaurant-image">
+        </a>
+        {{/each}}
+      </div>
+    </div>
   </div>
 </div>
