@@ -1,10 +1,10 @@
 const { Restaurant, User, Category } = require('../../models')
 const { localFileHandler } = require('../../helpers/file-helpers')
-const admintServices = require('../../services/admin-services')
+const adminServices = require('../../services/admin-services')
 
 const adminController = {
   getRestaurants: (req, res, next) => {
-    admintServices.getRestaurants(req, (err, data) => err ? next(err) : res.render('admin/restaurants', data))
+    adminServices.getRestaurants(req, (err, data) => err ? next(err) : res.render('admin/restaurants', data))
   },
   getRestaurant: (req, res, next) => {
     Restaurant.findByPk(req.params.id, {
@@ -24,25 +24,12 @@ const adminController = {
       .catch(err => next(err))
   },
   postRestaurant: (req, res, next) => {
-    const { name, tel, address, openingHours, description, categoryId } = req.body
-
-    if (!name) throw new Error('Restaurant name is required!')
-    const { file } = req
-    localFileHandler(file)
-      .then(filePath => Restaurant.create({
-        name,
-        tel,
-        address,
-        openingHours,
-        description,
-        image: filePath || null,
-        categoryId
-      }))
-      .then(() => {
-        req.flash('success_messages', 'Restaurant was successfully created')
-        res.redirect('/admin/restaurants')
-      })
-      .catch(err => next(err))
+    adminServices.postRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.flash('success_messages', 'Restaurant was successfully created')
+      req.session.createdData = data
+      return res.redirect('/admin/restaurants')
+    })
   },
   editRestaurant: (req, res, next) => {
     return Promise.all([
@@ -82,7 +69,7 @@ const adminController = {
       .catch(err => next(err))
   },
   deleteRestaurant: (req, res, next) => {
-    admintServices.deleteRestaurant(req, (err, data) => {
+    adminServices.deleteRestaurant(req, (err, data) => {
       if (err) return next(err)
       req.session.deletedData = data
       return res.redirect('/admin/restaurants')
