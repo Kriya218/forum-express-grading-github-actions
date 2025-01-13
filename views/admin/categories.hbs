@@ -1,6 +1,7 @@
 {{>admin-tabs route='categories'}}
 <div class="d-flex align-items-center pt-3 pb-5 my-3 text-white-50 bg-purple">
-  {{#if category}}
+  {{!-- 若路由有接收到 id 參數 => 顯示編輯種類相關內容  --}}
+  {{#if category}} 
     <form class="row" action="/admin/categories/{{category.id}}?_method=PUT" method="POST">
       <div class="col-auto">
         <input class="form-control" type="text" value="{{category.name}}" name="name">

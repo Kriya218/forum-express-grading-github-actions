@@ -1,7 +1,4 @@
-const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../../models')
-const { localFileHandler } = require('../../helpers/file-helpers')
-const { getUser } = require('../../helpers/auth-helpers')
-const { checkRepeat } = require('../../helpers/check-repeat')
+const { User, Restaurant, Favorite, Like, Followship } = require('../../models')
 const userServices = require('../../services/user-service')
 
 const userController = {
@@ -9,7 +6,7 @@ const userController = {
     res.render('signup')
   },
   signUp: (req, res, next) => {
-    userServices.signIn(req, (err, data) => {
+    userServices.signUp(req, (err, data) => {
       if (err) return next(err)
       req.flash('success_messages', '註冊成功')
       return res.redirect('/signin')
@@ -28,29 +25,7 @@ const userController = {
     res.redirect('/signin')
   },
   getUser: (req, res, next) => {
-    const userId = getUser(req).id
-    return User.findByPk(req.params.id, {
-      include: [
-        { model: Comment, include: Restaurant },
-        { model: Restaurant, as: 'FavoritedRestaurants' },
-        { model: User, as: 'Followers' },
-        { model: User, as: 'Followings' }
-      ],
-      order: [[{ model: Comment }, 'createdAt', 'DESC']]
-    })
-      .then(user => {
-        if (!user) throw new Error("User didn't exist!")
-        const editedUser = {
-          ...user.toJSON(),
-          commentRests: checkRepeat(user.Comments, 'restaurantId'),
-          commentsCounts: checkRepeat(user.Comments, 'restaurantId').length,
-          favoritedCount: user.FavoritedRestaurants.length,
-          followersCount: user.Followers.length,
-          followingsCount: user.Followings.length
-        }
-        return res.render('users/profile', { user: editedUser, userId })
-      })
-      .catch(err => next(err))
+    userServices.getUser(req, (err, data) => err ? next(err) : res.render('users/profile', data))
   },
   editUser: (req, res, next) => {
     return User.findByPk(req.params.id, { raw: true })
@@ -61,25 +36,11 @@ const userController = {
       .catch(err => next(err))
   },
   putUser: (req, res, next) => {
-    const { name } = req.body
-    const { file } = req
-    if (!name) throw new Error('User name is required!')
-    return Promise.all([
-      User.findByPk(req.params.id),
-      localFileHandler(file)
-    ])
-      .then(([user, filePath]) => {
-        if (!user) throw new Error("User didn't exist!")
-        return user.update({
-          name,
-          image: filePath || user.image
-        })
-      })
-      .then(() => {
-        req.flash('success_messages', '使用者資料編輯成功')
-        return res.redirect(`/users/${req.params.id}`)
-      })
-      .catch(err => next(err))
+    userServices.putUser(req, (err, data) => {
+      if (err) return next(err)
+      req.flash('success_messages', '使用者資料編輯成功')
+      return res.redirect(`/users/${req.params.id}`)
+    })
   },
   addFavorite: (req, res, next) => {
     const { restaurantId } = req.params
@@ -154,20 +115,7 @@ const userController = {
       .catch(err => next(err))
   },
   getTopUsers: (req, res, next) => {
-    return User.findAll({
-      include: [{ model: User, as: 'Followers' }]
-    })
-      .then(users => {
-        const results = users
-          .map(user => ({
-            ...user.toJSON(),
-            followerCount: user.Followers.length,
-            isFollowed: req.user.Followings.some(f => f.id === user.id)
-          }))
-          .sort((a, b) => b.followerCount - a.followerCount)
-        res.render('top-users', { users: results })
-      })
-      .catch(err => next(err))
+    userServices.getTopUsers(req, (err, data) => err ? next(err) : res.render('top-users', data))
   },
   addFollowing: (req, res, next) => {
     const { userId } = req.params

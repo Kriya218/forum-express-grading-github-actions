@@ -1,5 +1,4 @@
 const { Restaurant, User, Category } = require('../../models')
-const { localFileHandler } = require('../../helpers/file-helpers')
 const adminServices = require('../../services/admin-services')
 
 const adminController = {
@@ -43,30 +42,11 @@ const adminController = {
       .catch(err => next(err))
   },
   putRestaurant: (req, res, next) => {
-    const { name, tel, address, openingHours, description, categoryId } = req.body
-    if (!name) throw new Error('Restaurant name is required!')
-    const { file } = req
-    Promise.all([
-      Restaurant.findByPk(req.params.id),
-      localFileHandler(file)
-    ])
-      .then(([restaurant, filePath]) => {
-        if (!restaurant) throw new Error('Restaurant did not exist!')
-        return restaurant.update({
-          name,
-          tel,
-          address,
-          openingHours,
-          description,
-          image: filePath || restaurant.image,
-          categoryId
-        })
-      })
-      .then(() => {
-        req.flash('success_messages', 'Restaurant was updated successfully')
-        res.redirect('/admin/restaurants')
-      })
-      .catch(err => next(err))
+    adminServices.putRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.flash('success_messages', 'Restaurant was updated successfully')
+      return res.redirect('/admin/restaurants')
+    })
   },
   deleteRestaurant: (req, res, next) => {
     adminServices.deleteRestaurant(req, (err, data) => {
@@ -75,11 +55,8 @@ const adminController = {
       return res.redirect('/admin/restaurants')
     })
   },
-  getUsers: (req, res) => {
-    return User.findAll({ raw: true })
-      .then(users => {
-        return res.render('admin/users', { users })
-      })
+  getUsers: (req, res, next) => {
+    adminServices.getUsers(req, (err, data) => err ? next(err) : res.render('admin/users', data))
   },
   patchUser: (req, res, next) => {
     return User.findByPk(req.params.id)
